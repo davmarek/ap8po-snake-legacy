@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+
+// https://codereview.stackexchange.com/questions/127515/first-c-program-snake-game
+// https://www.youtube.com/watch?v=SGZgvMwjq2U
 ///█ ■
 ////https://www.youtube.com/watch?v=SGZgvMwjq2U
 namespace Snake
