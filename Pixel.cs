@@ -15,5 +15,5 @@ public class Pixel
 
     public int PosX { get; set; }
     public int PosY { get; set; }
-    public ConsoleColor Color { get; set; }
+    public ConsoleColor ?Color { get; init; }
 }
