@@ -14,42 +14,42 @@ namespace Snake
         {
             // Console.WindowHeight = 16;
             // Console.WindowWidth = 32;
-            int screenWidth = Console.WindowWidth;
-            int screenHeight = Console.WindowHeight;
+            int windowWidth = Console.WindowWidth;
+            int windowHeight = Console.WindowHeight;
             Random randomNumber = new Random();
             int score = 5;
             bool isGameOver = false;
             Pixel snakeHead = new Pixel
             {
-                PosX = screenWidth / 2,
-                PosY = screenHeight / 2,
+                PosX = windowWidth / 2,
+                PosY = windowHeight / 2,
                 Color = ConsoleColor.Red
             };
             Direction movement = Direction.Right;
             List<int> snakeBodiesX = new List<int>();
             List<int> snakeBodiesY = new List<int>();
-            int berryX = randomNumber.Next(0, screenWidth);
-            int berryY = randomNumber.Next(0, screenHeight);
+            int berryX = randomNumber.Next(0, windowWidth);
+            int berryY = randomNumber.Next(0, windowHeight);
             DateTime dateTimeBeforeWait;
             DateTime dateTimeWhileWaiting;
             bool isButtonPressed;
             while (true)
             {
                 Console.Clear();
-                if (snakeHead.PosX == screenWidth - 1 || snakeHead.PosX == 0 || snakeHead.PosY == screenHeight - 1 ||
+                if (snakeHead.PosX == windowWidth - 1 || snakeHead.PosX == 0 || snakeHead.PosY == windowHeight - 1 ||
                     snakeHead.PosY == 0)
                 {
                     isGameOver = true;
                 }
 
-                RenderBorder(screenWidth, screenHeight);
+                RenderBorder(windowWidth, windowHeight);
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 if (berryX == snakeHead.PosX && berryY == snakeHead.PosY)
                 {
                     score++;
-                    berryX = randomNumber.Next(1, screenWidth - 2);
-                    berryY = randomNumber.Next(1, screenHeight - 2);
+                    berryX = randomNumber.Next(1, windowWidth - 2);
+                    berryY = randomNumber.Next(1, windowHeight - 2);
                 }
 
                 for (int i = 0; i < snakeBodiesX.Count(); i++)
@@ -139,9 +139,9 @@ namespace Snake
                 }
             }
 
-            Console.SetCursorPosition(screenWidth / 5, screenHeight / 2);
+            Console.SetCursorPosition(windowWidth / 5, windowHeight / 2);
             Console.WriteLine("Game over, Score: " + score);
-            Console.SetCursorPosition(screenWidth / 5, screenHeight / 2 + 1);
+            Console.SetCursorPosition(windowWidth / 5, windowHeight / 2 + 1);
         }
 
         class Pixel
