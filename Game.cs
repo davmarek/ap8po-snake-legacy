@@ -9,59 +9,51 @@ public class Game
     private bool _isGameOver;
     private Direction _movement = Direction.Right;
 
-    private readonly Random _randomNumber = new();
+    private readonly SnakeHead _snakeHead;
+    private readonly Berry _berry;
+    private readonly List<Pixel> _bodyParts = [];
+
+    public Game()
+    {
+        _snakeHead = new SnakeHead(
+            _windowWidth / 2,
+            _windowHeight / 2
+        );
+
+        _berry = new Berry(_windowWidth, _windowHeight);
+    }
 
 
     public void Start()
     {
-        var snakeHead = new Pixel
-        {
-            PosX = _windowWidth / 2,
-            PosY = _windowHeight / 2,
-            Color = ConsoleColor.Blue
-        };
-        
-        var berry = new Pixel
-        {
-            PosX = _randomNumber.Next(0, _windowWidth),
-            PosY = _randomNumber.Next(0, _windowHeight),
-            Color = ConsoleColor.DarkRed
-        };
-
-        var bodyParts = new List<Pixel>();
-
         // What happens every frame
         while (true)
         {
             // Check for collisions with borders
-            if (snakeHead.PosX == _windowWidth - 1 || snakeHead.PosX == 0 || snakeHead.PosY == _windowHeight - 1 ||
-                snakeHead.PosY == 0)
-            {
-                _isGameOver = true;
-            }
-            
+            _isGameOver = IsPixelInBorder(_snakeHead);
+
+
             // Check for collision with berry
-            if (berry.PosX == snakeHead.PosX && berry.PosY == snakeHead.PosY)
+            if (_snakeHead.EqualsPosition(_berry))
             {
                 _score++;
-                berry.PosX = _randomNumber.Next(1, _windowWidth - 2);
-                berry.PosY = _randomNumber.Next(1, _windowHeight - 2);
+                _berry.RespawnBerry();
             }
-            
+
             // Re-render screen
             Console.Clear();
-            
-            foreach (var part in bodyParts)
+
+            foreach (var bodyPart in _bodyParts)
             {
-                RenderCell(part.PosX, part.PosY, ConsoleColor.Green);
-                if (part.PosX == snakeHead.PosX && part.PosY == snakeHead.PosY)
+                RenderCell(bodyPart.PosX, bodyPart.PosY, ConsoleColor.Green);
+                if (bodyPart.EqualsPosition(_snakeHead))
                 {
                     _isGameOver = true;
                 }
             }
-            
-            RenderPixel(snakeHead);
-            RenderPixel(berry);
+
+            RenderPixel(_snakeHead);
+            RenderPixel(_berry);
             RenderBorder();
 
             // End the game if there was a collision with border or body 
@@ -69,7 +61,7 @@ public class Game
             {
                 break;
             }
-            
+
             var dateTimeBeforeWait = DateTime.Now;
             var buttonWasPressed = false;
             // Waiting for the next frame (read the inputs for the next move)
@@ -84,69 +76,28 @@ public class Game
 
                 // Read the key only if available or no key was already pressed 
                 if (!Console.KeyAvailable || buttonWasPressed) continue;
-                
-                
-                var key = Console.ReadKey(true).Key;
-                switch (key)
-                {
-                    case ConsoleKey.UpArrow when _movement != Direction.Down:
-                        _movement = Direction.Up;
-                        buttonWasPressed = true;
-                        break;
-                    case ConsoleKey.DownArrow when _movement != Direction.Up:
-                        _movement = Direction.Down;
-                        buttonWasPressed = true;
-                        break;
-                    case ConsoleKey.LeftArrow when _movement != Direction.Right:
-                        _movement = Direction.Left;
-                        buttonWasPressed = true;
-                        break;
-                    case ConsoleKey.RightArrow when _movement != Direction.Left:
-                        _movement = Direction.Right;
-                        buttonWasPressed = true;
-                        break;
-                }
+                buttonWasPressed = HandleInput();
             }
-            
-            // End-of-frame logic
 
+            // End-of-frame logic
             // Add a new body part
-            bodyParts.Add(new Pixel
+            _bodyParts.Add(new Pixel
             (
-                snakeHead.PosX,
-                snakeHead.PosY
+                _snakeHead.PosX,
+                _snakeHead.PosY
             ));
-            
+
             // Move the snake head
-            switch (_movement)
-            {
-                case Direction.Up:
-                    snakeHead.PosY--;
-                    break;
-                case Direction.Down:
-                    snakeHead.PosY++;
-                    break;
-                case Direction.Left:
-                    snakeHead.PosX--;
-                    break;
-                case Direction.Right:
-                    snakeHead.PosX++;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            _snakeHead.MoveInDirection(_movement);
 
             // Remove the last part of the body (depends on the current score)
-            if (bodyParts.Count > _score)
+            if (_bodyParts.Count > _score)
             {
-                bodyParts.RemoveAt(0);
+                _bodyParts.RemoveAt(0);
             }
         }
 
-        // Game over text
-        Console.SetCursorPosition(_windowWidth / 5, _windowHeight / 2);
-        Console.WriteLine("Game over, Score: " + _score);
-        Console.SetCursorPosition(_windowWidth / 5, _windowHeight / 2 + 1);
+        RenderGameOver();
     }
 
     private void RenderBorder()
@@ -175,5 +126,45 @@ public class Game
     private static void RenderPixel(Pixel pixel)
     {
         RenderCell(pixel.PosX, pixel.PosY, pixel.Color ?? ConsoleColor.White);
+    }
+
+    private bool IsPixelInBorder(Pixel pixel)
+    {
+        return pixel.PosX == 0 || pixel.PosY == 0 || pixel.PosX == _windowWidth - 1 || pixel.PosY == _windowHeight - 1;
+    }
+
+    private void RenderGameOver()
+    {
+        Console.SetCursorPosition(_windowWidth / 5, _windowHeight / 2);
+        Console.WriteLine("Game over, Score: " + _score);
+        Console.SetCursorPosition(_windowWidth / 5, _windowHeight / 2 + 1);
+    }
+
+
+    // Returns whether a valid input has been registered
+    private bool HandleInput()
+    {
+        var key = Console.ReadKey(true).Key;
+        switch (key)
+        {
+            case ConsoleKey.UpArrow when _movement != Direction.Down:
+                _movement = Direction.Up;
+                return true;
+
+            case ConsoleKey.DownArrow when _movement != Direction.Up:
+                _movement = Direction.Down;
+                return true;
+
+            case ConsoleKey.LeftArrow when _movement != Direction.Right:
+                _movement = Direction.Left;
+                return true;
+
+            case ConsoleKey.RightArrow when _movement != Direction.Left:
+                _movement = Direction.Right;
+                return true;
+
+            default:
+                return false;
+        }
     }
 }
