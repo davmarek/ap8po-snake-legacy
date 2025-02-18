@@ -5,9 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
-// https://codereview.stackexchange.com/questions/127515/first-c-program-snake-game
-// https://www.youtube.com/watch?v=SGZgvMwjq2U
-///█ ■
 ////https://www.youtube.com/watch?v=SGZgvMwjq2U
 namespace Snake
 {
@@ -15,8 +12,8 @@ namespace Snake
     {
         static void Main(string[] args)
         {
-            //Console.WindowHeight = 16;
-            //Console.WindowWidth = 32;
+            // Console.WindowHeight = 16;
+            // Console.WindowWidth = 32;
             int screenwidth = Console.WindowWidth;
             int screenheight = Console.WindowHeight;
             Random randomnummer = new Random();
@@ -154,4 +151,3 @@ namespace Snake
         }
     }
 }
-//¦
