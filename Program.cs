@@ -23,13 +23,17 @@ namespace Snake
             {
                 PosX = windowWidth / 2,
                 PosY = windowHeight / 2,
-                Color = ConsoleColor.Red
+                Color = ConsoleColor.Blue
             };
             Direction movement = Direction.Right;
-            List<int> snakeBodiesX = new List<int>();
-            List<int> snakeBodiesY = new List<int>();
-            int berryX = randomNumber.Next(0, windowWidth);
-            int berryY = randomNumber.Next(0, windowHeight);
+            Pixel berry = new Pixel
+            {
+                PosX = randomNumber.Next(0, windowWidth),
+                PosY = randomNumber.Next(0, windowHeight),
+                Color = ConsoleColor.DarkRed
+            };
+
+            List<Pixel> bodyParts = new List<Pixel>();
             DateTime dateTimeBeforeWait;
             DateTime dateTimeWhileWaiting;
             bool isButtonPressed;
@@ -45,18 +49,17 @@ namespace Snake
                 RenderBorder(windowWidth, windowHeight);
 
                 Console.ForegroundColor = ConsoleColor.Green;
-                if (berryX == snakeHead.PosX && berryY == snakeHead.PosY)
+                if (berry.PosX == snakeHead.PosX && berry.PosY == snakeHead.PosY)
                 {
                     score++;
-                    berryX = randomNumber.Next(1, windowWidth - 2);
-                    berryY = randomNumber.Next(1, windowHeight - 2);
+                    berry.PosX = randomNumber.Next(1, windowWidth - 2);
+                    berry.PosY = randomNumber.Next(1, windowHeight - 2);
                 }
 
-                for (int i = 0; i < snakeBodiesX.Count(); i++)
+                for (int i = 0; i < bodyParts.Count; i++)
                 {
-                    Console.SetCursorPosition(snakeBodiesX[i], snakeBodiesY[i]);
-                    Console.Write("■");
-                    if (snakeBodiesX[i] == snakeHead.PosX && snakeBodiesY[i] == snakeHead.PosY)
+                    RenderCell(bodyParts[i].PosX, bodyParts[i].PosY, ConsoleColor.Green);
+                    if (bodyParts[i].PosX == snakeHead.PosX && bodyParts[i].PosY == snakeHead.PosY)
                     {
                         isGameOver = true;
                     }
@@ -67,18 +70,16 @@ namespace Snake
                     break;
                 }
 
-                Console.SetCursorPosition(snakeHead.PosX, snakeHead.PosY);
-                Console.ForegroundColor = snakeHead.Color;
-                Console.Write("■");
-                Console.SetCursorPosition(berryX, berryY);
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write("■");
+                RenderCell(snakeHead.PosX, snakeHead.PosY, snakeHead.Color);
+                RenderCell(berry.PosX, berry.PosY, berry.Color);
+
+                Console.ForegroundColor = ConsoleColor.White;
                 dateTimeBeforeWait = DateTime.Now;
                 isButtonPressed = false;
                 while (true)
                 {
                     dateTimeWhileWaiting = DateTime.Now;
-                    if (dateTimeWhileWaiting.Subtract(dateTimeBeforeWait).TotalMilliseconds > 500)
+                    if (dateTimeWhileWaiting.Subtract(dateTimeBeforeWait).TotalMilliseconds > 200)
                     {
                         break;
                     }
@@ -114,8 +115,12 @@ namespace Snake
                     }
                 }
 
-                snakeBodiesX.Add(snakeHead.PosX);
-                snakeBodiesY.Add(snakeHead.PosY);
+                bodyParts.Add(new Pixel
+                (
+                    snakeHead.PosX,
+                    snakeHead.PosY
+                ));
+                // snakeBodiesY.Add(snakeHead.PosY);
                 switch (movement)
                 {
                     case Direction.Up:
@@ -132,10 +137,9 @@ namespace Snake
                         break;
                 }
 
-                if (snakeBodiesX.Count > score)
+                if (bodyParts.Count > score)
                 {
-                    snakeBodiesX.RemoveAt(0);
-                    snakeBodiesY.RemoveAt(0);
+                    bodyParts.RemoveAt(0);
                 }
             }
 
@@ -144,32 +148,26 @@ namespace Snake
             Console.SetCursorPosition(windowWidth / 5, windowHeight / 2 + 1);
         }
 
-        class Pixel
-        {
-            public int PosX { get; set; }
-            public int PosY { get; set; }
-            public ConsoleColor Color { get; set; }
-        }
-
         static void RenderBorder(int width, int height)
         {
             for (int i = 0; i < width; i++)
             {
-                Console.SetCursorPosition(i, 0);
-                Console.Write("■");
-
-                Console.SetCursorPosition(i, height - 1);
-                Console.Write("■");
+                RenderCell(i, 0);
+                RenderCell(i, height - 1);
             }
 
             for (int i = 0; i < height; i++)
             {
-                Console.SetCursorPosition(0, i);
-                Console.Write("■");
-
-                Console.SetCursorPosition(width - 1, i);
-                Console.Write("■");
+                RenderCell(0, i);
+                RenderCell(width - 1, i);
             }
+        }
+
+        static void RenderCell(int posX, int posY, ConsoleColor color = ConsoleColor.White)
+        {
+            Console.SetCursorPosition(posX, posY);
+            Console.ForegroundColor = color;
+            Console.Write("■");
         }
     }
 }
