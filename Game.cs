@@ -1,21 +1,28 @@
+using System.Diagnostics;
+
 namespace Snake;
 
 public class Game
 {
+    // Constants
+    private const int TimeBetweenFrames = 200;
+
+    // Game parameters
     private readonly int _windowWidth = Console.WindowWidth;
     private readonly int _windowHeight = Console.WindowHeight;
 
+    // State
     private int _score = 5;
     private bool _isGameOver;
     private Direction _movement = Direction.Right;
 
-    private readonly SnakeHead _snakeHead;
+    // Game objects
+    private readonly Snake _snake;
     private readonly Berry _berry;
-    private readonly List<Pixel> _bodyParts = [];
 
     public Game()
     {
-        _snakeHead = new SnakeHead(
+        _snake = new Snake(
             _windowWidth / 2,
             _windowHeight / 2
         );
@@ -26,35 +33,20 @@ public class Game
 
     public void Start()
     {
-        // What happens every frame
+        // Main loop
         while (true)
         {
             // Check for collisions with borders
-            _isGameOver = IsPixelInBorder(_snakeHead);
-
+            _isGameOver = IsPixelInBorder(_snake.Head);
 
             // Check for collision with berry
-            if (_snakeHead.EqualsPosition(_berry))
+            if (_snake.Head.EqualsPosition(_berry))
             {
                 _score++;
                 _berry.RespawnBerry();
             }
 
-            // Re-render screen
-            Console.Clear();
-
-            foreach (var bodyPart in _bodyParts)
-            {
-                RenderCell(bodyPart.PosX, bodyPart.PosY, ConsoleColor.Green);
-                if (bodyPart.EqualsPosition(_snakeHead))
-                {
-                    _isGameOver = true;
-                }
-            }
-
-            RenderPixel(_snakeHead);
-            RenderPixel(_berry);
-            RenderBorder();
+            RenderGame();
 
             // End the game if there was a collision with border or body 
             if (_isGameOver)
@@ -62,42 +54,33 @@ public class Game
                 break;
             }
 
-            var dateTimeBeforeWait = DateTime.Now;
-            var buttonWasPressed = false;
             // Waiting for the next frame (read the inputs for the next move)
-            while (true)
+            var stopwatch = Stopwatch.StartNew();
+            var buttonWasPressed = false;
+            while (stopwatch.ElapsedMilliseconds <= TimeBetweenFrames)
             {
-                // Check the timer
-                var dateTimeWhileWaiting = DateTime.Now;
-                if (dateTimeWhileWaiting.Subtract(dateTimeBeforeWait).TotalMilliseconds > 200)
-                {
-                    break;
-                }
-
                 // Read the key only if available or no key was already pressed 
                 if (!Console.KeyAvailable || buttonWasPressed) continue;
                 buttonWasPressed = HandleInput();
             }
 
             // End-of-frame logic
-            // Add a new body part
-            _bodyParts.Add(new Pixel
-            (
-                _snakeHead.PosX,
-                _snakeHead.PosY
-            ));
-
-            // Move the snake head
-            _snakeHead.MoveInDirection(_movement);
-
-            // Remove the last part of the body (depends on the current score)
-            if (_bodyParts.Count > _score)
-            {
-                _bodyParts.RemoveAt(0);
-            }
+            _snake.AddBodyPart(_snake.Head);
+            _snake.Head.MoveInDirection(_movement);
+            _snake.RemoveLastBodyPart(_score);
         }
 
         RenderGameOver();
+    }
+
+    // Re-render the entire game - snake, berry and borders
+    private void RenderGame()
+    {
+        Console.Clear();
+        _isGameOver = RenderBody(_snake) ?? _isGameOver;
+        RenderPixel(_snake.Head);
+        RenderPixel(_berry);
+        RenderBorder();
     }
 
     private void RenderBorder()
@@ -115,6 +98,12 @@ public class Game
         }
     }
 
+
+    private static void RenderPixel(Pixel pixel)
+    {
+        RenderCell(pixel.PosX, pixel.PosY, pixel.Color ?? ConsoleColor.White);
+    }
+
     private static void RenderCell(int posX, int posY, ConsoleColor color = ConsoleColor.White)
     {
         Console.SetCursorPosition(posX, posY);
@@ -123,9 +112,19 @@ public class Game
         Console.SetCursorPosition(0, 0);
     }
 
-    private static void RenderPixel(Pixel pixel)
+
+    private static bool? RenderBody(Snake snake)
     {
-        RenderCell(pixel.PosX, pixel.PosY, pixel.Color ?? ConsoleColor.White);
+        foreach (var bodyPart in snake.Body)
+        {
+            RenderCell(bodyPart.PosX, bodyPart.PosY, ConsoleColor.Green);
+            if (bodyPart.EqualsPosition(snake.Head))
+            {
+                return true;
+            }
+        }
+
+        return null;
     }
 
     private bool IsPixelInBorder(Pixel pixel)
